@@ -1,25 +1,22 @@
-// To access by a browser in another computer, use the external IP of machine running AttackMapServer
-// from the same computer(only), you can use the internal IP.
-// Example:
-// - AttackMapServer machine:
-//   - Internal IP: 127.0.0.1
-//   - External IP: 192.168.11.106
-var webSock = new WebSocket("ws:/127.0.0.1:8888/websocket"); // Internal
-//var webSock = new WebSocket("ws:/192.168.1.100:8888/websocket"); // External
+var webSock = new WebSocket("ws://127.0.0.1:8888/websocket");
 
 // link map
 
-L.mapbox.accessToken = "pk.eyJ1IjoibW1heTYwMSIsImEiOiJjaWgyYWU3NWQweWx2d3ltMDl4eGk5eWY1In0.9YoOkALPP7zaoim34ZITxw";
-var map = L.mapbox.map("map", "mapbox.dark", {
-center: [0, 0], // lat, long
-zoom: 2
-});
+L.mapbox.accessToken = "pk.eyJ1IjoiZXpyYWltYW51ZWwiLCJhIjoiY2phZjlqN2hyMTQydzJxb2llczEybmdoeSJ9.goCGIoORSZDGEq7XamYn9Q";
+//var map = L.mapbox.map("map", "mapbox.dark", {
+//center: [-6.238684, 106.823961], // lat, long
+//zoom: 3
+//});
+
+var map = L.mapbox.map('map')
+.setView([-6.238684, 106.823961], 3)
+.addLayer(L.mapbox.styleLayer('mapbox://styles/mapbox/dark-v10'));
 
 // add full screen option
 L.control.fullscreen().addTo(map);
 
 // hq coords
-var hqLatLng = new L.LatLng(37.3845, -122.0881);
+var hqLatLng = new L.LatLng(-6.238684, 106.823961);
 
 // hq marker
 L.circle(hqLatLng, 110000, {
@@ -208,7 +205,7 @@ function addCircle(msg, srcLatLng) {
     circleArray = circles.getLayers();
 
     // Only allow 50 circles to be on the map at a time
-    if (circleCount >= 50) {
+    if (circleCount >= 100) {
         circles.removeLayer(circleArray[0]);
     }
 
@@ -219,6 +216,7 @@ function addCircle(msg, srcLatLng) {
         }).addTo(circles);
     }
 
+/*
 function prependAttackRow(id, args) {
     var tr = document.createElement('tr');
     count = args.length;
@@ -247,6 +245,32 @@ function prependAttackRow(id, args) {
     }
 
     element.insertBefore(tr, element.firstChild);
+}
+*/
+
+function prependAttackRow(id, args) {
+        var tr = document.createElement('tr');
+        count = args.length;
+        for (var i = 0; i < count; i++) {
+                var td = document.createElement('td');
+                if (args[i] === args[3]) {
+                        var path = 'static/flags/' + args[i].toUpperCase() + '.png';
+                        var img = document.createElement('img');
+                        img.src = path;
+                        td.appendChild(img);
+                        tr.appendChild(td);
+                } else {
+                        var textNode = document.createTextNode(args[i]);
+                        td.appendChild(textNode);
+                        tr.appendChild(td);
+                }
+        }
+        var element = document.getElementById(id);
+        var rowCount = element.rows.length;
+        if (rowCount >= 50) {
+                element.deleteRow(rowCount -1);
+        }
+        element.insertBefore(tr, element.firstChild);
 }
 
 function prependTypeRow(id, args) {
@@ -418,10 +442,12 @@ function handleLegend(msg) {
                 msg.iso_code];
     var attackList = [msg.event_time,
               msg.src_ip,
+              msg.dst_ip,
               msg.iso_code,
               msg.country,
               msg.city,
-              msg.protocol];
+              msg.protocol,
+              msg.type2];
     redrawCountIP('#ip-tracking','ip-tracking', ipCountList, msg.ip_to_code);
     redrawCountIP2('#country-tracking', 'country-tracking', countryCountList, msg.country_to_code);
     prependAttackRow('attack-tracking', attackList);
@@ -450,17 +476,17 @@ function handleLegendType(msg) {
 // WEBSOCKET STUFF
 
 webSock.onmessage = function (e) {
-    console.log("Got a websocket message...");
+    // console.log("Got a websocket message...");
     try {
         var msg = JSON.parse(e.data);
         console.log(msg);
         switch(msg.type) {
         case "Traffic":
-            console.log("Traffic!");
+            // console.log("Traffic!");
             var srcLatLng = new L.LatLng(msg.src_lat, msg.src_long);
             var hqPoint = map.latLngToLayerPoint(hqLatLng);
             var srcPoint = map.latLngToLayerPoint(srcLatLng);
-            console.log('');
+            // console.log('');
             addCircle(msg, srcLatLng);
             handleParticle(msg, srcPoint);
             handleTraffic(msg, srcPoint, hqPoint, srcLatLng);
@@ -470,12 +496,12 @@ webSock.onmessage = function (e) {
         // Add support for other message types?
         }
     } catch(err) {
-        console.log(err)
+         console.log(err)
     }
 };
 
 $(document).on("click","#informIP #exit", function (e) {
-    $("#informIP").hide();      
+    $("#informIP").hide();
 });
 
 $(document).on("click", '.container-fluid .showInfo', function(e) {
@@ -491,3 +517,4 @@ $(document).on("click","#informIP #blockIP", function (e) {
     console.log("Sending message: "+ipBlocked);
     webSock.send(ipBlocked);
 });
+
