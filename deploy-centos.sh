@@ -2,7 +2,7 @@
 
 # Install system dependencies
 echo "Installing system dependencies..."
-sudo yum install python3-pip redis -y;
+sudo yum install python3-pip redis wget -y;
 
 # Allow firewall port 8888
 sudo firewall-cmd --zone=public --add-port=8888/tcp
