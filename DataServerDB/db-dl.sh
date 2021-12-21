@@ -1,4 +1,4 @@
 #!/bin/bash
 
-wget http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz
+wget https://github.com/texnikru/GeoLite2-Database/raw/master/GeoLite2-City.mmdb.gz
 gunzip GeoLite2-City.mmdb.gz
